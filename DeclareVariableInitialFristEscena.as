@@ -1,0 +1,1 @@
+var respuestas: Array= new Array(16);
