@@ -159,40 +159,49 @@ class gestorController extends Controller
         DB::beginTransaction();
     
         try {
-            foreach ($rows as $row) {              
-
-              if($row[0]!== null && $row[0]!== '' ){
-                $user= User::create([
-                    'nombres'=>$row[0],
-                    'apellidos'=>$row[1],
-                    'username'=>$row[3],
-                    'email'=>$row[4],
-                    'password'=>bcrypt($row[5]),
-    
-                ]);
-    
-    
-              $nino =  nino::create([
-                    'user_id'=>$user->id,
-                    'sexo'=>$row[2],
-                    'institucion_id'=>$row[6],
-                    'fecha_nacimiento'=>  Carbon::createFromFormat('d/m/Y', $row[7])->format('Y-m-d'),
-                    'departamento'=>$row[8],
-                    'direccion'=>$row[9],
-                    'activo'=>'1',
-                ]);
-              }
+            foreach ($rows as $row) {
+                if ($row[0] !== null && $row[0] !== '') {
+                    // Buscamos si ya existe un usuario con el mismo nombre de usuario
+                    $existingUser = User::where('username', $row[3])->first();
+            
+                    // Si no existe, creamos el usuario y el niño
+                    if (!$existingUser) {
+                        $user = User::create([
+                            'nombres' => $row[0],
+                            'apellidos' => $row[1],
+                            'username' => $row[3],
+                            'email' => $row[4],
+                            'password' => bcrypt($row[5]),
+                        ]);
+            
+                        $nino = nino::create([
+                            'user_id' => $user->id,
+                            'sexo' => $row[2],
+                            'institucion_id' => $row[6],
+                            'fecha_nacimiento' => Carbon::createFromFormat('d/m/Y', $row[7])->format('Y-m-d'),
+                            'departamento' => $row[8],
+                            'direccion' => $row[9],
+                            'activo' => '1',
+                        ]);
+                    } else {
+                        // Si el usuario ya existe, puedes manejarlo aquí según tu lógica, por ejemplo, ignorarlo o generar un mensaje de error
+                        // Por ejemplo, si deseas ignorarlo:
+                        continue; // Salta a la próxima iteración del bucle
+                        // O si deseas mostrar un mensaje de error:
+                        // return response()->json(['error' => 'El usuario ya existe'], 400);
+                    }
+                }
             }
 
             DB::commit();
           
             
-            Session::flash('flash_message', 'Niño agregado correctamente');
+            Session::flash('flash_message', 'Niños agregados correctamente');
             return redirect()->route('registarninos');
         } catch (\Exception $e) {
             DB::rollback();
-            Session::flash('flash_message', 'Error al agregar usuarios: ' . $e->getMessage());
-            dd( $e->getMessage());
+            Session::flash('flash_message', 'Error al agregar usuarios, verifique el formato suministrado' );
+          
         }
     
         return redirect()->route('registarninos');
