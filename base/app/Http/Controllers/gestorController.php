@@ -82,7 +82,7 @@ class gestorController extends Controller
             'fecha_nacimiento'=>'required',
             'email'=>'required',
             'direccion'=>'required',
-           
+            'departamento'=>'required',
             'password'=>'required|confirmed',
             'password_confirmation'=>'required',
 

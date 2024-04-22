@@ -133,45 +133,9 @@
                     </div>
 
                     <div class="form-group {{ $errors->has('departamento') ? ' has-error' : '' }}">
-                        <label for="departamento" class="col-sm-2 control-label">Departamento</label>
+                        <label for="departamento" class="col-sm-2 control-label">País | Departamento | Ciudad </label>
                         <div class="col-md-6" >
-                            <select class=" form-control " name="departamento" id="departamento">
-                                    <option value="{{old('departamento')}}">Escoger Departamento...</option>
-                              {{--<option value="{{$institucion->id}}"  @if(old('id_institucion') == $institucion->id) {{'selected'}} @else{{''}} @endif  >{{$institucion->nombre}}</option>--}}
-                                <option value="Amazonas"  {{  old('id_institucion') == 'Amazonas'? 'selected' :'' }}  >Amazonas</option>
-                                <option value="Antioquia"  {{  old('id_institucion') == 'Antioquia'? 'selected' :'' }}  >Antioquia</option>
-                                <option value="Antioquia"  {{  old('id_institucion') == 'Antioquia'? 'selected' :'' }}  >Antioquia</option>
-                                <option value="Atlántico"  {{  old('id_institucion') == 'Atlántico'? 'selected' :'' }}  >Atlántico</option>
-                                <option value="Bolívar"  {{  old('id_institucion') == 'Bolívar'? 'selected' :'' }}  >Bolívar</option>
-                                <option value="Boyacá"  {{  old('id_institucion') == 'Boyacá'? 'selected' :'' }}  >Boyacá</option>
-                                <option value="Caldas"  {{  old('id_institucion') == 'Caldas'? 'selected' :'' }}  >Caldas</option>
-                                <option value="Caquetá"  {{  old('id_institucion') == 'Caquetá'? 'selected' :'' }}  >Caquetá</option>
-                                <option value="Casanare"  {{  old('id_institucion') == 'Casanare'? 'selected' :'' }}  >Casanare</option>
-                                <option value="Cauca"  {{  old('id_institucion') == 'Cauca'? 'selected' :'' }}  >Cauca</option>
-                                <option value="Cesar"  {{  old('id_institucion') == 'Cesar'? 'selected' :'' }}  >Cesar</option>
-                                <option value="Chocó"  {{  old('id_institucion') == 'Chocó'? 'selected' :'' }}  >Chocó</option>
-                                <option value="Córdoba"  {{  old('id_institucion') == 'Córdoba'? 'selected' :'' }}  >Córdoba</option>
-                                <option value="Cundinamarca"  {{  old('id_institucion') == 'Cundinamarca'? 'selected' :'' }}  >Cundinamarca</option>
-                                <option value="Güainia"  {{  old('id_institucion') == 'Güainia'? 'selected' :'' }}  >Güainia</option>
-                                <option value="Guaviare"  {{  old('id_institucion') == 'Guaviare'? 'selected' :'' }}  >Guaviare</option>
-                                <option value="Huila"  {{  old('id_institucion') == 'Huila'? 'selected' :'' }}  >Huila</option>
-                                <option value="La Guajira"  {{  old('id_institucion') == 'La Guajira'? 'selected' :'' }}  >La Guajira</option>
-                                <option value="Magdalena"  {{  old('id_institucion') == 'Magdalena'? 'selected' :'' }}  >Magdalena</option>
-                                <option value="Meta"  {{  old('id_institucion') == 'Meta'? 'selected' :'' }}  >Meta</option>
-                                <option value="Nariño"  {{  old('id_institucion') == 'Nariño'? 'selected' :'' }}  >Nariño</option>
-                                <option value="Norte de Santander"  {{  old('id_institucion') == 'Norte de Santander'? 'selected' :'' }}  >Norte de Santander</option>
-                                <option value="Putumayo"  {{  old('id_institucion') == 'Putumayo'? 'selected' :'' }}  >Putumayo</option>
-                                <option value="Quindío"  {{  old('id_institucion') == 'Quindío'? 'selected' :'' }}  >Quindío</option>
-                                <option value="Risaralda"  {{  old('id_institucion') == 'Risaralda'? 'selected' :'' }}  >Risaralda</option>
-                                <option value="San Andrés y Providencia"  {{  old('id_institucion') == 'San Andrés y Providencia'? 'selected' :'' }}  >San Andrés y Providencia</option>
-                                <option value="Santander"  {{  old('id_institucion') == 'Santander'? 'selected' :'' }}  >Santander</option>
-                                <option value="Sucre"  {{  old('id_institucion') == 'Sucre'? 'selected' :'' }}  >Sucre</option>
-                                <option value="Tolima"  {{  old('id_institucion') == 'Tolima'? 'selected' :'' }}  >Tolima</option>
-                                <option value="Valle del Cauca"  {{  old('id_institucion') == 'Valle del Cauca'? 'selected' :'' }}  >Valle del Cauca</option>
-                                <option value="Vaupés"  {{  old('id_institucion') == 'Vaupés'? 'selected' :'' }}  >Vaupés</option>
-                                <option value="Vichada"  {{  old('id_institucion') == 'Vichada'? 'selected' :'' }}  >Vichada</option>
-
-                            </select>
+                            <input type="text" class="form-control pull-right " name="departamento" id="departamento"  value="{{ old('departamento') }}">
                         </div>
                     </div>
 
