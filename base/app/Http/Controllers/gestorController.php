@@ -80,7 +80,7 @@ class gestorController extends Controller
             'username'=>'required',
             'id_institucion'=>'required',
             'fecha_nacimiento'=>'required',
-            
+            'email'=>'required',
             'direccion'=>'required',
            
             'password'=>'required|confirmed',
@@ -89,38 +89,49 @@ class gestorController extends Controller
         ],[
             'nombres.required'=>'Nombre es campo requerido',
            
-        ]);
+        ]);     
 
-        //dd($valoresNino);
+        DB::beginTransaction();
+    
+        try {
+       
+            $existingUser = User::where('username', $valoresNino['username'])->first();
+            
+                    // Si no existe, creamos el usuario y el niño
+                    if (!$existingUser) {
+                        $user= User::create([
+                            'nombres'=>$valoresNino['nombres'],
+                            'apellidos'=>$valoresNino['apellidos'],
+                            'username'=>$valoresNino['username'],
+                            'email'=>$valoresNino['email'],
+                            'password'=>bcrypt($valoresNino['password']),
 
-        DB::transaction(function () use ($valoresNino) {
-
-
-            $user= User::create([
-                'nombres'=>$valoresNino['nombres'],
-                'apellidos'=>$valoresNino['apellidos'],
-                'username'=>$valoresNino['username'],
-                'email'=>$valoresNino['email'],
-                'password'=>bcrypt($valoresNino['password']),
-
-            ]);
-
-
-            nino::create([
-                'user_id'=>$user->id,
-                'sexo'=>$valoresNino['sexo'],
-                'institucion_id'=>$valoresNino['id_institucion'],
-                'fecha_nacimiento'=>$valoresNino['fecha_nacimiento'],
-                'departamento'=>$valoresNino['departamento'],
-                'direccion'=>$valoresNino['direccion'],
-                'activo'=>'1',
-            ]);
+                        ]);
 
 
-        });
-        Session::flash('flash_message', 'Niño agregado correctamente');
-        return redirect()->route('registarninos');
+                        nino::create([
+                            'user_id'=>$user->id,
+                            'sexo'=>$valoresNino['sexo'],
+                            'institucion_id'=>$valoresNino['id_institucion'],
+                            'fecha_nacimiento'=>$valoresNino['fecha_nacimiento'],
+                            'departamento'=>$valoresNino['departamento'],
+                            'direccion'=>$valoresNino['direccion'],
+                            'activo'=>'1',
+                        ]);
+                        
 
+                        DB::commit();
+                        Session::flash('flash_message', 'Niño agregado correctamente');
+                    }else{
+                        Session::flash('flash_message', 'Usuario existente');
+                    }
+
+                        return redirect()->route('registarninos');
+                    } catch (\Exception $e) {
+                        DB::rollback();
+                        Session::flash('flash_message', 'Error al agregar usuario'.$e->getMessage() );
+                        return redirect()->route('registarninos');
+                    }
     }
 
 
