@@ -510,11 +510,11 @@ class InformesController extends Controller
      
        $modelo = $collection;
 
-   
+  
 
        $data = ['respuestaGenerales'=>$modelo];
 
-            
+         
        // init_set('memory_limit','-1');
        // set_time_limit(3000000);
 

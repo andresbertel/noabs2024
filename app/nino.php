@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class nino extends Model
 {
     protected $fillable = [
-        'id','user_id','sexo', 'institucion_id','fecha_nacimiento', 'departamento', 'direccion','activo',
+        'id','user_id','sexo','curso', 'institucion_id','fecha_nacimiento', 'departamento', 'direccion','activo',
     ];
 
     public function usuario()

@@ -78,6 +78,7 @@ class gestorController extends Controller
             'apellidos'=>'required',
             'sexo'=>'required',
             'username'=>'required',
+            'curso'=>'required',
             'id_institucion'=>'required',
             'fecha_nacimiento'=>'required',
             'email'=>'required',
@@ -112,6 +113,7 @@ class gestorController extends Controller
                         nino::create([
                             'user_id'=>$user->id,
                             'sexo'=>$valoresNino['sexo'],
+                            'curso'=>$valoresNino['curso'],
                             'institucion_id'=>$valoresNino['id_institucion'],
                             'fecha_nacimiento'=>$valoresNino['fecha_nacimiento'],
                             'departamento'=>$valoresNino['departamento'],
@@ -192,6 +194,7 @@ class gestorController extends Controller
                             'fecha_nacimiento' => Carbon::createFromFormat('d/m/Y', $row[7])->format('Y-m-d'),
                             'departamento' => $row[8],
                             'direccion' => $row[9],
+                            'curso' => $row[10],
                             'activo' => '1',
                         ]);
                     } else {
@@ -308,6 +311,7 @@ class gestorController extends Controller
             'nombres'=>'required|min:5',
             'apellidos'=>'required',
             'sexo'=>'required',
+            'curso'=>'required',
             'username'=>'required|unique:users,username,'.request()->input('huser_id'),
             'id_institucion'=>'required',
             'fecha_nacimiento'=>'required',
@@ -341,6 +345,7 @@ class gestorController extends Controller
             $ninoActual->institucion_id = $valoresNino['id_institucion'];
             $ninoActual->fecha_nacimiento = $valoresNino['fecha_nacimiento'];
             $ninoActual->sexo = $valoresNino['sexo'];
+            $ninoActual->curso = $valoresNino['curso'];
             $ninoActual->departamento = $valoresNino['departamento'];
             $ninoActual->direccion = $valoresNino['direccion'];
             $ninoActual->activo = $valoresNino['activo'];

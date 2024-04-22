@@ -94,6 +94,16 @@
                         </div>
                     </div>
 
+                    <div class="form-group {{ $errors->has('curso') ? ' has-error' : '' }}">
+                        <label for="curso" class="col-sm-2 control-label">{{ __('Curso') }}</label>
+
+                        <div class="col-md-6">
+                            <input id="curso" type="text" class="form-control" name="curso" value="{{ old('curso') }}" >
+
+                        </div>
+                    </div>
+
+
                     <div class="form-group {{ $errors->has('username') ? '  has-error' : '' }}">
                         <label for="username" id="username" class="col-sm-2 control-label">{{ __('Usuario') }}</label>
 

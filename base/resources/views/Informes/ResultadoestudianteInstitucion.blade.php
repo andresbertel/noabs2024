@@ -9,6 +9,7 @@
                 <th>Apellidos</th>
                 <th>Sexo</th>
                 <th>Edad</th>
+                <th>Curso</th>
                 <th>Departamento</th>
                 <th>Dirección</th>              
                 <th>Institucion</th>              
@@ -41,6 +42,7 @@
                             echo $edad; // Mostrar la edad en años
                        @endphp
                    </td>
+                   <td>{{$respuesta['nino']->curso ?? '-'}}</td>
                     <td>{{$respuesta['nino']->departamento}}</td>
                     <td>{{$respuesta['nino']->direccion}}</td>
                     <td>{{$respuesta['institucion']->nombre}}</td>
@@ -89,6 +91,7 @@
                 <th>Apellidos</th>
                 <th>Sexo</th>
                 <th>Edad</th>
+                <th>Curso</th>
                 <th>Departamento</th>
                 <th>Dirección</th>              
                 <th>Institucion</th>               
