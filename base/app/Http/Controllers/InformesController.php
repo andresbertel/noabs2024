@@ -493,10 +493,11 @@ class InformesController extends Controller
          
 
            $nino_respuesta['respuesta']['totalPreguntas'] = $totalP;
+           $nino_respuesta['today'] = Carbon::now();
            
            $respuestaGenerales[] = $nino_respuesta;
           
-         
+       
            $collection = Collection::make($respuestaGenerales);
 
           

@@ -8,6 +8,7 @@
                 <th>Nombre</th>               
                 <th>Apellidos</th>
                 <th>Sexo</th>
+                <th>Edad</th>
                 <th>Departamento</th>
                 <th>Dirección</th>              
                 <th>Institucion</th>              
@@ -29,9 +30,17 @@
 
             <tr data-nombre="{{$respuesta['user']->nombres}}" data-apellido="{{$respuesta['user']->apellidos}}" data-acertadad="{{$respuesta['respuesta']->acertadas}}" data-neutras="{{$respuesta['respuesta']->neutras}}" data-negativas="{{$respuesta['respuesta']->negativas}}">
                     <td >{{$respuesta['user']->nombres}}</td>
-                    <td >{{$respuesta['user']->apellidos}}</td>
-                   
+                    <td >{{$respuesta['user']->apellidos}}</td>                   
                     <td>{{$respuesta['nino']->sexo}}</td>
+                    <td> @php
+                            // Obtener la fecha de nacimiento del niño
+                            $fechaNacimiento = $respuesta['nino']->fecha_nacimiento;
+                            
+                            // Calcular la edad a partir de la fecha de nacimiento
+                            $edad = \Carbon\Carbon::parse($fechaNacimiento)->age;
+                            echo $edad; // Mostrar la edad en años
+                       @endphp
+                   </td>
                     <td>{{$respuesta['nino']->departamento}}</td>
                     <td>{{$respuesta['nino']->direccion}}</td>
                     <td>{{$respuesta['institucion']->nombre}}</td>
@@ -79,6 +88,7 @@
             <th>Nombre</th>               
                 <th>Apellidos</th>
                 <th>Sexo</th>
+                <th>Edad</th>
                 <th>Departamento</th>
                 <th>Dirección</th>              
                 <th>Institucion</th>               
