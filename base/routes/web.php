@@ -42,7 +42,7 @@ Route::group(['middleware' => ['auth','can:isAdmin']], function () {
     Route::post('actualizarinstitucion','adminController@actualizarInstitucion')->name('actualizarinstitucion');
     Route::get('gestores', 'adminController@verGestores')->name('gestores');
     Route::post('actualizargestor', 'adminController@actualizarGestor')->name('actualizarGestor');
-    Route::get('andres', 'adminController@andresmetodo');
+   
     
  
     

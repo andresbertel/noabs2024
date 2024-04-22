@@ -49,16 +49,18 @@ class InformesController extends Controller
        if(isset($user->gestor->first()->exists)){
 
            $ninos = $user->gestor->first()->institucion->nino;
+           
+        
           
            foreach ($ninos as $nino){
-            
-               if($nino->respuestas->first()!=null){
-                    foreach ( $nino->respuestas as $respnino){
-                      $respuestasNino[] = $respnino;
-                   }
-                   
-                   
-               }
+      
+            $respuesta = $nino->respuestas->firstWhere('id', $idRes);
+
+            // Si encontramos la respuesta, la agregamos al array $respuestasNino
+            if ($respuesta) {               
+                $respuestasNino[] = $respuesta;
+                break;
+            }
                
            }
 
@@ -69,8 +71,10 @@ class InformesController extends Controller
        $collection=Collection::make(null);
        $nino_respuesta['preguntas']= pregunta::all(); 
       
-
+      
        foreach ($respuestasNino as $respuesta){
+
+     
         
           $nino_respuesta['user']=$respuesta->nino->usuario;
          $nino_respuesta['nino']=$respuesta->nino;
@@ -244,13 +248,8 @@ class InformesController extends Controller
        }
 
      
-       $modelo = $collection->take(10);
-
-  // dd($modelo);
-
+       $modelo = $collection;
        $primerElemento = $modelo->first()['user'];
-
-      
 
       if ($primerElemento) {
         $nombre = $primerElemento->nombres;
@@ -261,14 +260,17 @@ class InformesController extends Controller
 
      
       }
+
+    
+
        $data = ['respuestaGenerales'=>$modelo];
 
-       //dd($data);
+    
 
        $pdf = app('dompdf.wrapper');
        $pdf->loadView('Informes.test',$data)->setOptions(['defaultFont' => 'DejaVuSans-Bold'])->setPaper('a4', 'landscape');
-
-    // return view('Informes.test',$data);
+       
+      //return view('Informes.test',$data);
 
        return $pdf->download($nombreArchivo);
     }
