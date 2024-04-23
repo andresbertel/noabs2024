@@ -13,6 +13,7 @@
                 <th>Apellidos</th>
                 <th>Username</th>
                 <th>Email</th>
+                <th>Curso</th>
                 <th>Institucion</th>
                 <th>Fecha de nacimiento</th>
                 <th>Departamento</th>
@@ -32,6 +33,7 @@
                     <td>{{$nino->apellidos_user}}</td>
                     <td>{{$nino->username_user}}</td>
                     <td>{{$nino->email_user}}</td>
+                    <td>{{$nino->curso ?? '-'}}</td>
                     <td>{{$nino->nombre_institucion}}</td>
                     <td>{{$nino->fecha_nacimiento}}</td>
                     <td>{{$nino->departamento}}</td>
@@ -49,6 +51,7 @@
                                 $('#sexo').val('{{$nino->sexo}}');
                                 $('#username').val('{{$nino->username_user}}');
                                 $('#departamento').val('{{$nino->departamento}}');
+                                $('#curso').val('{{$nino->curso}}');
                                 $('#fecha_nacimiento').val('{{$nino->fecha_nacimiento}}');
                                 $('#direccion').val('{{$nino->direccion}}');
                                 $('#id_institucion').val('{{$nino->institucion_id}}');
@@ -76,10 +79,11 @@
             </tbody>
             <tfoot>
             <tr>
-                <th>Nombre</th>
+            <th>Nombre</th>
                 <th>Apellidos</th>
                 <th>Username</th>
                 <th>Email</th>
+                <th>Curso</th>
                 <th>Institucion</th>
                 <th>Fecha de nacimiento</th>
                 <th>Departamento</th>
@@ -172,6 +176,15 @@
 
                         </div>
 
+                        <div class="form-group {{ $errors->has('curso') ? ' has-error' : '' }}">
+                        <label for="curso" class="col-sm-2 control-label">{{ __('Curso') }}</label>
+
+                        <div class="col-md-6">
+                            <input id="curso" type="text" class="form-control" name="curso" value="{{ old('curso') }}" >
+
+                        </div>
+                    </div>
+
                         <div class="form-group {{ $errors->has('fecha_nacimiento') ? ' has-error' : '' }}">
                             <label for="fecha_nacimiento" class="col-sm-2 control-label">{{ __('Fecha de Nacimiento') }}</label>
 
@@ -182,15 +195,10 @@
                         </div>
 
                         <div class="form-group {{ $errors->has('departamento') ? ' has-error' : '' }}">
-                            <label for="departamento" class="col-sm-2 control-label">Departamento</label>
-                            <div class="col-md-6" >
-                                <select class=" form-control " name="departamento" id="departamento">
-                                    <option value="{{old('departamento')}}">Escoger Departamento...</option>
-                                    {{--<option value="{{$institucion->id}}"  @if(old('id_institucion') == $institucion->id) {{'selected'}} @else{{''}} @endif  >{{$institucion->nombre}}</option>--}}
-                                    <option value="Sucre"  {{  old('id_institucion') == 'Sucre'? 'selected' :'' }}  >Sucre</option>
-
-                                </select>
-                            </div>
+                                <label for="departamento" class="col-sm-2 control-label">País | Departamento | Ciudad </label>
+                                <div class="col-md-6" >
+                                    <input type="text" class="form-control pull-right " name="departamento" id="departamento"  value="{{ old('departamento') }}">
+                                </div>
                         </div>
 
                         <div class="form-group {{ $errors->has('direccion') ? ' has-error' : '' }}">
