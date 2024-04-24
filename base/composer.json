@@ -9,7 +9,9 @@
         "barryvdh/laravel-dompdf": "^0.8.3",       
         "fideloper/proxy": "^4.0",
         "laravel/framework": "5.7.*",
-        "laravel/tinker": "^1.0"
+        "laravel/tinker": "^1.0",
+        "maatwebsite/excel": "3.1.0",
+        "illuminate/support": "5.7.*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.2",
@@ -26,7 +28,8 @@
             "database/factories"
         ],
         "psr-4": {
-            "App\\": "app/"
+            "App\\": "app/",
+          
         }
     },
     "autoload-dev": {

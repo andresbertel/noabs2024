@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+
+
 use App\gestor;
 use App\institucion;
 use App\nino;
@@ -56,7 +58,6 @@ class gestorController extends Controller
             $fec_final = new Carbon($institucioFechaF);
             $fec_actual = new Carbon();
 
-            //dd($fec_final);
 
             if($fec_final>$fec_actual){
                 $permitido = true;
@@ -308,7 +309,7 @@ class gestorController extends Controller
             'hid'=>'required',
             'huser_id'=>'required',
             'password'=>'',
-            'nombres'=>'required|min:5',
+            'nombres'=>'required',
             'apellidos'=>'required',
             'sexo'=>'required',
             'curso'=>'required',
@@ -318,7 +319,7 @@ class gestorController extends Controller
             'departamento'=>'required',
             'direccion'=>'required',
             'activo'=>'required',
-            'email'=>'required|unique:users,email,'.request()->input('huser_id'),
+            'email'=>'required',
 
 
 
@@ -360,7 +361,7 @@ class gestorController extends Controller
     }
 
     function  verResultados(){
-
+        $respuestasNino = [];
         $user= Auth::user();
         if(isset($user->admin->first()->exists)){
             $respuestasNino = respuesta_nino::all();
@@ -609,6 +610,4 @@ class gestorController extends Controller
 
         return $pdf->download('listado.pdf');
     }
-
-
 }

@@ -80,6 +80,18 @@
                         </div>
 
 
+                        
+                    <div class="form-group {{ $errors->has('numero_test') ? '  has-error' : '' }}">
+                        <label for="numero_test"  class="col-sm-2 control-label">{{ __('Número de aplicaciones') }}</label>
+
+                        <div class="col-md-6">
+                            <input id="numero_test" type="text" class="form-control" name="numero_test" value="{{ old('numero_test') }}" pattern="[0-9]*" title="Por favor, introduce solo números">
+
+
+                        </div>
+                    </div>
+
+
                     <div class="box-footer">
                         <button type="submit" class="btn  btn-primary btn-lg">
                             {{ __('Registrar Institución') }}

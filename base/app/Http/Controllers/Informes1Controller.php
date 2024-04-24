@@ -278,7 +278,6 @@ class InformesController extends Controller
 
     function InformePorInstitucion($idInst=0){
 
-        $respuestasNino = [];
         $resultador = respuesta_nino::where('id','=',$idInst)->select('r1','r2','r3','r4','r5','r6','r7','r8','r9','r10','r11','r12','r13','r14','r15')->get();
         $preguntas = pregunta::all();
         
@@ -293,7 +292,7 @@ class InformesController extends Controller
            ->with('respuestas') // Cargar las respuestas asociadas
            ->get();
 
-        
+           $respuestasNino = [];
 
            foreach ($ninosConRespuestas as $nino) {
                if ($nino->respuestas->isNotEmpty()) {

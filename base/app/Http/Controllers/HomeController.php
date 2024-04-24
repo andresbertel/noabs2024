@@ -39,13 +39,32 @@ class HomeController extends Controller
            $fec_final = new Carbon($institucioFechaF);
            $fec_actual = new Carbon();
 
-           //dd($fec_final);
+          if($institucionNino->numero_test == 0){
 
-           if($fec_final>$fec_actual){
-               $permitido = true;
-           }else{
-               $permitido = false;
-           }
+            if($fec_final>$fec_actual){
+
+                $permitido = true;
+
+            }else{
+
+                $permitido = false;
+            }
+
+          }else{
+
+            $numero_ninos_con_respuestas = $user->nino()->whereHas('respuestas')->count();
+
+            if($numero_ninos_con_respuestas < $institucionNino->numero_test){
+
+                $permitido = true;
+
+            }else{
+
+                $permitido = false;
+
+            }
+          }
+
        }
 
 

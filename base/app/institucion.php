@@ -8,7 +8,7 @@ class institucion extends Model
 {
 
     protected $fillable=[
-        'id','nombre','departamento','direccion','telefono','fecha_inicio','fecha_final',
+        'id','nombre','departamento','direccion','telefono','fecha_inicio','fecha_final','numero_test'
     ];
 
     public function gestor()

@@ -37,7 +37,7 @@ Route::group(['middleware' => ['auth','can:isAdmin']], function () {
     Route::get('registrarinstitucion', 'adminController@institucionForm')->name('registarinstitucion');
     Route::post('registrarinstitucion', 'adminController@registerIntitucion');
     Route::get('registergestor', 'adminController@gestorForm')->name('registergestor');
-  //  Route::post('registergestor', 'adminController@registerGestor');
+    Route::post('registergestor', 'adminController@registerGestor');
     Route::get('instituciones', 'adminController@verInstituciones')->name('instituciones');
     Route::post('actualizarinstitucion','adminController@actualizarInstitucion')->name('actualizarinstitucion');
     Route::get('gestores', 'adminController@verGestores')->name('gestores');

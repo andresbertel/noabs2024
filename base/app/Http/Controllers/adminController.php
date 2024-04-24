@@ -9,17 +9,6 @@ use App\pregunta;
 use App\respuesta_nino;
 use App\User;
 
-
-
-
-
-
-
-
-
-
-
-
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -51,11 +40,11 @@ class adminController extends Controller
         $valoresInstitucion =request()->validate([
             'nombre'=>'required|min:5',
             'departamento'=>'required',
-            'direccion'=>'required',
-            'departamento'=>'required',
+            'direccion'=>'required',            
             'telefono'=>'required|numeric',
             'fecha_inicio'=>'',
             'fecha_final'=>'required',
+            'numero_test'=>'required',
         ],[
             'nombre.required'=>'Nombre es campo requerido',
             'nombre.min'=>'El nombre debe contener minimo cinco caracteres'
@@ -71,6 +60,7 @@ class adminController extends Controller
             'direccion'     =>  $valoresInstitucion['direccion'],
             'fecha_inicio'  =>  $fec_actual,
             'fecha_final'   =>  $valoresInstitucion['fecha_final'],
+            'numero_test'   =>  $valoresInstitucion['numero_test'],
 
         ]);
 
@@ -171,11 +161,12 @@ class adminController extends Controller
         $valoresInstitucion =request()->validate([
             'id'=>'required',
             'nombre'=>'required|min:5',
-            'departamento'=>'required',
+            'departamento'=>'required',           
             'direccion'=>'required',
             'telefono'=>'required|numeric',
             'fecha_inicio'=>'required',
             'fecha_final'=>'required',
+            'numero_test'=>'required',
         ],[
             'nombre.required'=>'Nombre es campo requerido',
             'nombre.min'=>'El nombre debe contener minimo cinco caracteres'
@@ -237,92 +228,6 @@ class adminController extends Controller
     }
 
 
-
-    function andresMetodo($idRes=0){
-
-       $user= Auth::user();
-        $ninos = "";
-        if(isset($user->admin->first()->exists)){
-            $instituciones = institucion::all();
-            $ninos = nino::all();
-            $permitido = true;
-        }
-		
-		
-
-        if(isset($user->gestor->first()->exists)){
-
-            $permitido = false;
-
-            $idGestor = Auth::user()->id;
-            $gestor = gestor::where('user_id',$idGestor)->first();
-            $idInsti = $gestor->institucion_id;
-            $instituciones=institucion::where('id', $idInsti)->get();
-
-            $ninos = nino::where('institucion_id','=',$idInsti)->get();
-
-            // dd($instituciones->first()->fecha_final);
-
-            $institucioFechaF = $instituciones->first()->fecha_final;
-            //dd($institucioFechaF);
-
-            $fec_final = new Carbon($institucioFechaF);
-            $fec_actual = new Carbon();
-
-            //dd($fec_final);
-
-            if($fec_final>$fec_actual){
-                $permitido = true;
-            }
-
-
-        }
-
-
-
-        // dd($ninos);
-  $totalNinos = array();
-        foreach ($ninos as $nino){
-            $userNino = $nino->usuario;
-            $institucioNino = $nino->institucion;
-
-            // dd($institucioNino->fecha_final);
-
-
-
-
-            $nombreI = $institucioNino->nombre;
-            //dd($nombreI);
-
-            $nino['nombres_user']= $userNino->nombres;
-            $nino['apellidos_user']= $userNino->apellidos;
-            $nino['username_user']= $userNino->username;
-            $nino['email_user']= $userNino->email;
-            $nino['nombre_institucion'] = $nombreI;
-
-          
-			    $totalNinos[] = $nino;
-		  
-		  
-
-        }
-		$totalninos =collect($totalNinos);
-		//dd($total->count());
-
-        
-       $pdf = app('dompdf.wrapper');
-
-       $data = ['ninos'=>$totalninos,'instituciones'=>$instituciones,'permitido'=>$permitido];
-
-      
-      
-     $pdf->loadView('nino.allninos',$data)->setOptions(['defaultFont' => 'sans-serif']);
-    return $pdf->download('andres.pdf');
-
-
-       
-    
-     }
 
      
 
