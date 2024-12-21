@@ -568,16 +568,15 @@ class InformesController extends Controller
 
     public function exportarExcel($idInst = 0)
     {
-        $fileName = 'respuestas.csv'; // Nombre del archivo
-        $respuestasNino = []; // Inicializar array para almacenar las respuestas
+        $respuestasNino = [];
         $user = Auth::user();
     
         // Obtener respuestas de los niños según el tipo de usuario
         if (isset($user->admin->first()->exists)) {
             $institucion_id = $idInst;
             $ninosConRespuestas = Nino::where('institucion_id', $institucion_id)
-                ->whereHas('respuestas') // Filtrar niños con respuestas asociadas
-                ->with('respuestas') // Cargar respuestas asociadas
+                ->whereHas('respuestas')
+                ->with('respuestas')
                 ->get();
     
             foreach ($ninosConRespuestas as $nino) {
@@ -601,76 +600,146 @@ class InformesController extends Controller
             }
         }
     
-        // Verificar que existan respuestas antes de continuar
-        if (empty($respuestasNino)) {
-            return response()->json(['error' => 'No se encontraron datos para exportar'], 404);
+        // Procesar respuestas y calcular valores adicionales
+        foreach ($respuestasNino as $respuesta) {
+            $totalPreguntas = 15;
+            $rn = 0; // "Sí"
+            $rneu = 0; // "No sé"
+            $rp = 0; // "No"
+            $rcfamiliar = 0;
+            $rctecnologico = 0;
+            $rcescolar = 0;
+            $rcsocial = 0;
+    
+            $preguntas = pregunta::all();
+    
+            // Contar respuestas y calcular riesgos por contexto
+            for ($i = 1; $i <= $totalPreguntas; $i++) {
+                $atr = 'r' . $i;
+                $respuestaValor = $respuesta->$atr;
+    
+                if ($respuestaValor === 1) {
+                    $rp++;
+                    if ($preguntas[$i - 1]->contexto === 'Familiar') $rcfamiliar++;
+                    if ($preguntas[$i - 1]->contexto === 'Técnologico') $rctecnologico++;
+                    if ($preguntas[$i - 1]->contexto === 'Escolar') $rcescolar++;
+                    if ($preguntas[$i - 1]->contexto === 'Social') $rcsocial++;
+                } elseif ($respuestaValor === 2) {
+                    $rneu++;
+                } elseif ($respuestaValor === 3) {
+                    $rn++;
+                }
+            }
+    
+            // Calcular porcentaje de respuestas positivas
+            $porcentajePositivas = ($rn * 100) / $totalPreguntas;
+    
+            // Calcular nivel de riesgo general
+            $riesgo = 'Bajo';
+            if ($porcentajePositivas <= 37.5) {
+                $riesgo = 'Alto';
+            } elseif ($porcentajePositivas <= 75) {
+                $riesgo = 'Medio';
+            }
+    
+            // Calcular riesgos contextuales
+            $respuesta->riesgo = $riesgo;
+            $respuesta->acertadas = $rn;
+            $respuesta->neutras = $rneu;
+            $respuesta->negativas = $rp;
+    
+            $respuesta->cFamiliar = ($rcfamiliar * 100) / 3 < 50 ? 'Bajo' : (($rcfamiliar * 100) / 3 == 50 ? 'Medio' : 'Alto');
+            $respuesta->cEscolar = ($rcescolar * 100) / 3 < 50 ? 'Bajo' : (($rcescolar * 100) / 3 == 50 ? 'Medio' : 'Alto');
+            $respuesta->cSocial = ($rcsocial * 100) / 3 < 50 ? 'Bajo' : (($rcsocial * 100) / 3 == 50 ? 'Medio' : 'Alto');
+            $respuesta->cTecnologico = ($rctecnologico * 100) / 6 < 50 ? 'Bajo' : (($rctecnologico * 100) / 6 == 50 ? 'Medio' : 'Alto');
         }
     
-        // Crear los encabezados del archivo CSV
-        $headers = [
-            "Nombre", "Apellidos", "Sexo", "Fecha Nacimiento", "Edad Actual", "Edad al realizar test",
-            "Curso", "Departamento", "Dirección", "Institución", "R1", "R2", "R3", "R4", "R5", "Fecha realización test"
-        ];
+        // Crear la tabla HTML para Excel
+        $output = "\xEF\xBB\xBF"; // Agregar BOM para UTF-8
+        $output .= '
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Apellidos</th>
+                    <th>Sexo</th>
+                    <th>Fecha Nacimiento</th>
+                    <th>Edad Actual</th>
+                    <th>Edad al realizar test</th>
+                    <th>Curso</th>
+                    <th>Departamento</th>
+                    <th>Dirección</th>
+                    <th>Institucion</th>
+                    <th>R1</th>
+                    <th>R2</th>
+                    <th>R3</th>
+                    <th>R4</th>
+                    <th>R5</th>
+                    <th>R6</th>
+                    <th>R7</th>
+                    <th>R8</th>
+                    <th>R9</th>
+                    <th>R10</th>
+                    <th>R11</th>
+                    <th>R12</th>
+                    <th>R13</th>
+                    <th>R14</th>
+                    <th>R15</th>
+                    <th>No</th>
+                    <th>No sé</th>
+                    <th>Si</th>
+                    <th>Nivel de riesgo</th>
+                    <th>Riesgo Familiar</th>
+                    <th>Riesgo Escolar</th>
+                    <th>Riesgo Social</th>
+                    <th>Riesgo Tecnológico</th>
+                    <th>Fecha realización test</th>
+                </tr>
+            </thead>
+            <tbody>';
     
-        // Crear un buffer en memoria para almacenar el contenido del CSV
-        $csvContent = fopen('php://temp', 'w+');
-    
-        // Agregar BOM UTF-8 al inicio del archivo
-        fwrite($csvContent, "\xEF\xBB\xBF");
-    
-        // Escribir los encabezados
-        fputcsv($csvContent, $headers);
-    
-        // Procesar las respuestas y escribir cada fila en el CSV
         foreach ($respuestasNino as $respuesta) {
             $nino = $respuesta->nino;
             $usuario = $nino->usuario;
     
-            $fechaNacimiento = \Carbon\Carbon::parse($nino->fecha_nacimiento);
-            $edadActual = $fechaNacimiento->age;
-            $edadAlTest = $fechaNacimiento->diffInYears(\Carbon\Carbon::parse($respuesta->fecha_realizacion));
+            $output .= '
+                <tr>
+                    <td>' . htmlspecialchars($usuario->nombres, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($usuario->apellidos, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($nino->sexo, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($nino->fecha_nacimiento, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars(\Carbon\Carbon::parse($nino->fecha_nacimiento)->age, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars(\Carbon\Carbon::parse($nino->fecha_nacimiento)->diffInYears(\Carbon\Carbon::parse($respuesta->fecha_realizacion)), ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($nino->curso ?? '-', ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($nino->departamento, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($nino->direccion, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($nino->institucion->nombre, ENT_QUOTES, 'UTF-8') . '</td>';
     
-            $row = [
-                $usuario->nombres,
-                $usuario->apellidos,
-                $nino->sexo,
-                $nino->fecha_nacimiento,
-                $edadActual,
-                $edadAlTest,
-                $nino->curso ?? '-',
-                $nino->departamento,
-                $nino->direccion,
-                $nino->institucion->nombre,
-                $respuesta->r1,
-                $respuesta->r2,
-                $respuesta->r3,
-                $respuesta->r4,
-                $respuesta->r5,
-                $respuesta->fecha_realizacion,
-            ];
+            for ($i = 1; $i <= 15; $i++) {
+                $output .= '<td>' . htmlspecialchars($respuesta->{'r' . $i}, ENT_QUOTES, 'UTF-8') . '</td>';
+            }
     
-            fputcsv($csvContent, $row);
+            $output .= '
+                    <td>' . htmlspecialchars($respuesta->negativas, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($respuesta->neutras, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($respuesta->acertadas, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($respuesta->riesgo, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($respuesta->cFamiliar, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($respuesta->cEscolar, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($respuesta->cSocial, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($respuesta->cTecnologico, ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($respuesta->fecha_realizacion, ENT_QUOTES, 'UTF-8') . '</td>
+                </tr>';
         }
     
-        // Rebobinar el buffer para preparar la descarga
-        rewind($csvContent);
+        $output .= '</tbody></table>';
     
-        // Configurar encabezados para la descarga del archivo CSV
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-            'Cache-Control' => 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0',
-            'Pragma' => 'no-cache',
-        ];
-    
-        // Enviar el contenido del CSV al navegador
-        return response()->stream(function () use ($csvContent) {
-            fpassthru($csvContent);
-        }, 200, $headers);
+        return response($output, 200)
+            ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="respuestas.xls"')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0')
+            ->header('Pragma', 'no-cache');
     }
-    
-    
-    
 
 
 }
