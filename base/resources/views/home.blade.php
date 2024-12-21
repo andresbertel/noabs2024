@@ -31,7 +31,7 @@
                 <div class="alert alert-info"><h1 style="text-align: center">Este usuario ya posee respuestas registradas</h1></div>
             @endif
             @else
-                <div class="alert alert-danger"><h1 style="text-align: center">La licencia de utilización ha finalizado.</h1></div>
+                <div class="alert alert-danger"><h1 style="text-align: center">El tiempo de utilización ha finalizado.</h1></div>
            @endif
         @endcan
         <script src="{{asset('/bower_components/jquery/dist/jquery.min.js')}}"></script>

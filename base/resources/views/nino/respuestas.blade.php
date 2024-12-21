@@ -86,7 +86,7 @@
                         </td>
                     </tr>
                     @empty
-                    <h1>NO HAY RESULTADOS REGISTRADOS</h1>
+                    <h1>NO HAY RESULATADOS RESGISTRADOS</h1>
 
                 @endforelse
                 </tbody>

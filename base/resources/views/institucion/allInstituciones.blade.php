@@ -14,7 +14,6 @@
             <th>Telefono</th>
             <th>Fecha Inicio</th>
             <th>Fecha Final</th>
-            <th>Número de aplicaciones</th>
             <th>Opciones</th>
         </tr>
         </thead>
@@ -27,8 +26,6 @@
             <td>{{$institucion->telefono}}</td>
             <td>{{$institucion->fecha_inicio}}</td>
             <td>{{$institucion->fecha_final}}</td>
-            <td>{{$institucion->numero_test}}</td>
-           
             <td>
                 <button type="button" date-id="{{$institucion->id}}" class="btn btn-default" aria-label="Left Align" data-toggle="modal" data-target="#myModal" onclick="
                         $('#id').val('{{$institucion->id}}');
@@ -38,7 +35,6 @@
                         $('#telefono').val('{{$institucion->telefono}}');
                         $('#fecha_inicio').val('{{$institucion->fecha_inicio}}');
                         $('#fecha_final').val('{{$institucion->fecha_final}}');
-                        $('#numero_test').val('{{$institucion->numero_test}}');
                ">
                     <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
                 </button>
@@ -56,7 +52,6 @@
             <th>Telefono</th>
             <th>Fecha Inicio</th>
             <th>Fecha Final</th>
-            <th>Número de aplicaciones</th>
             <th>Opciones</th>
         </tr>
         </tfoot>
@@ -139,16 +134,6 @@
                             <input type="text" class="form-control pull-right " name="fecha_final" id="fecha_final" data-date-format='yyyy-mm-dd' value="{{ old('fecha_final') }}">
                         </div>
 
-                    </div>
-
-                    <div class="form-group {{ $errors->has('numero_test') ? '  has-error' : '' }}">
-                        <label for="numero_test" class="col-sm-2 control-label">{{ __('Número de aplicaciones') }}</label>
-
-                        <div class="col-md-6">
-                            <input id="numero_test" type="text" class="form-control" name="numero_test" value="{{ old('numero_test') }}" pattern="[0-9]*" title="Por favor, introduce solo números">
-
-
-                        </div>
                     </div>
 
 

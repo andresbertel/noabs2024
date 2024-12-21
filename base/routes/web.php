@@ -50,7 +50,7 @@ Route::group(['middleware' => ['auth','can:isAdmin']], function () {
 
 
 Route::group(['middleware' => ['auth','can:isGestor']], function () {
-   Route::get('registernino','gestorController@registerNinoForm')->name('registarninos');
+   Route::get('/registernino','gestorController@registerNinoForm')->name('registarninos');
    Route::post('registernino','gestorController@registerNino');
    Route::post('cargar-usuarios','gestorController@registerNinosCsv')->name('cargar.usuarios');
 
