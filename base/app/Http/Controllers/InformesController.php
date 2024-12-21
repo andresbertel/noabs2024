@@ -566,86 +566,62 @@ class InformesController extends Controller
         return Response::download($csvFilePath);
     }
 
-    function exportarExcel($idInst = 0)
+    public function exportarExcel($idInst = 0)
     {
-        
-        $fileName = 'respuestas.csv'; // Cambiar la extensión a .csv
-    
-        // Inicializar variables necesarias
-        $respuestasNino = [];
-        $respuestaGenerales = [];
+        $fileName = 'respuestas.csv'; // Nombre del archivo
+        $respuestasNino = []; // Inicializar array para almacenar las respuestas
         $user = Auth::user();
     
-        $resultador = respuesta_nino::where('id','=',$idInst)->select('r1','r2','r3','r4','r5','r6','r7','r8','r9','r10','r11','r12','r13','r14','r15')->get();
-        $preguntas = pregunta::all();
-        
-       $user= Auth::user();
-       if(isset($user->admin->first()->exists)){
-        $institucion_id = $idInst; // ID de la institución que deseas consultar
-
-      
-           // $respuestasNino = respuesta_nino::where('id','=',$idRes)->get();
-           $ninosConRespuestas = Nino::where('institucion_id', $institucion_id)
-           ->whereHas('respuestas') // Filtrar solo los niños que tienen respuestas asociadas
-           ->with('respuestas') // Cargar las respuestas asociadas
-           ->get();
-
-           $respuestasNino = [];
-
-           foreach ($ninosConRespuestas as $nino) {
-               if ($nino->respuestas->isNotEmpty()) {
-                   foreach ($nino->respuestas as $respnino) {
-                       $respuestasNino[] = $respnino;
-                   }
-               }
-           }
- 
-        
-       }
-
-       if(isset($user->gestor->first()->exists)){
-
-           $ninos = $user->gestor->first()->institucion->nino;
-          
-           foreach ($ninos as $nino){
-          
-               if($nino->respuestas->first()!=null){
-                    foreach ( $nino->respuestas as $respnino){
-                      $respuestasNino[] = $respnino;
-                   }
-                   
-                   
-               }
-               
-           }
-
-         
-
-       }
-
-      
-       $nino_respuesta['preguntas']= pregunta::all(); 
-
-
-
+        // Obtener respuestas de los niños según el tipo de usuario
+        if (isset($user->admin->first()->exists)) {
+            $institucion_id = $idInst;
+            $ninosConRespuestas = Nino::where('institucion_id', $institucion_id)
+                ->whereHas('respuestas') // Filtrar niños con respuestas asociadas
+                ->with('respuestas') // Cargar respuestas asociadas
+                ->get();
+    
+            foreach ($ninosConRespuestas as $nino) {
+                if ($nino->respuestas->isNotEmpty()) {
+                    foreach ($nino->respuestas as $respnino) {
+                        $respuestasNino[] = $respnino;
+                    }
+                }
+            }
+        }
+    
+        if (isset($user->gestor->first()->exists)) {
+            $ninos = $user->gestor->first()->institucion->nino;
+    
+            foreach ($ninos as $nino) {
+                if ($nino->respuestas->first() != null) {
+                    foreach ($nino->respuestas as $respnino) {
+                        $respuestasNino[] = $respnino;
+                    }
+                }
+            }
+        }
+    
         // Verificar que existan respuestas antes de continuar
         if (empty($respuestasNino)) {
             return response()->json(['error' => 'No se encontraron datos para exportar'], 404);
         }
     
-        // Crear un archivo CSV
+        // Crear los encabezados del archivo CSV
         $headers = [
             "Nombre", "Apellidos", "Sexo", "Fecha Nacimiento", "Edad Actual", "Edad al realizar test",
             "Curso", "Departamento", "Dirección", "Institución", "R1", "R2", "R3", "R4", "R5", "Fecha realización test"
         ];
     
-        // Abrir el archivo para escribir
-        $file = fopen('php://output', 'w');
-        
-        // Enviar encabezados CSV
-        fputcsv($file, $headers);
+        // Crear un buffer en memoria para almacenar el contenido del CSV
+        $csvContent = fopen('php://temp', 'w+');
     
-        // Escribir los datos
+        // Agregar BOM UTF-8 al inicio del archivo
+        fwrite($csvContent, "\xEF\xBB\xBF");
+    
+        // Escribir los encabezados
+        fputcsv($csvContent, $headers);
+    
+        // Procesar las respuestas y escribir cada fila en el CSV
         foreach ($respuestasNino as $respuesta) {
             $nino = $respuesta->nino;
             $usuario = $nino->usuario;
@@ -673,22 +649,27 @@ class InformesController extends Controller
                 $respuesta->fecha_realizacion,
             ];
     
-            fputcsv($file, $row);
+            fputcsv($csvContent, $row);
         }
     
-        // Cerrar archivo
-        fclose($file);
+        // Rebobinar el buffer para preparar la descarga
+        rewind($csvContent);
     
         // Configurar encabezados para la descarga del archivo CSV
-        return response()->stream(function () {
-            // No necesitamos hacer nada extra porque el archivo ya está siendo generado y descargado
-        }, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="respuestas.csv"',
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
             'Cache-Control' => 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0',
             'Pragma' => 'no-cache',
-        ]);
+        ];
+    
+        // Enviar el contenido del CSV al navegador
+        return response()->stream(function () use ($csvContent) {
+            fpassthru($csvContent);
+        }, 200, $headers);
     }
+    
+    
     
 
 
