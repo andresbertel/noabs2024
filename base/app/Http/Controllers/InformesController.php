@@ -649,9 +649,12 @@ class InformesController extends Controller
 
     $output .= '</tbody></table>';
 
+    $fechaHora = \Carbon\Carbon::now()->format('YmdHis');  // Formato: 2024-12-21-14-30-00
+
+
     return response($output, 200)
         ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
-        ->header('Content-Disposition', 'attachment; filename="respuestas.xls"')
+        ->header('Content-Disposition', 'attachment; filename="Informe-' . $fechaHora . '.xls"')
         ->header('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0')
         ->header('Pragma', 'no-cache');
 }
@@ -700,15 +703,18 @@ public function exportarCSV($idInst = 0)
         $output .= "\n";
     }
 
+    $fechaHora = \Carbon\Carbon::now()->format('YmdHis');  // Formato: 2024-12-21-14-30-00
+
+
     return response($output, 200)
         ->header('Content-Type', 'text/csv; charset=UTF-8')
-        ->header('Content-Disposition', 'attachment; filename="respuestas.csv"')
+        ->header('Content-Disposition', 'attachment; filename="Informe-' . $fechaHora . '.csv"')
         ->header('Cache-Control', 'no-cache')
         ->header('Pragma', 'no-cache');
 }
 
 
-    public function procesarRespuestas($idInst = 0)
+public function procesarRespuestas($idInst = 0)
 {
     $respuestasNino = [];
     $user = Auth::user();
@@ -744,60 +750,154 @@ public function exportarCSV($idInst = 0)
 
     // Procesar respuestas y calcular valores adicionales
     foreach ($respuestasNino as $respuesta) {
-        $totalPreguntas = 15;
-        $rn = 0; // "Sí"
-        $rneu = 0; // "No sé"
-        $rp = 0; // "No"
+        $rp = 0;
+        $rneu = 0;
+        $rn = 0;
+
         $rcfamiliar = 0;
         $rctecnologico = 0;
         $rcescolar = 0;
         $rcsocial = 0;
+        $totalP = 15;
+        $riesgo = "";
 
-        $preguntas = pregunta::all();
+        $riesgoFamiliar = "";
+        $riesgoSocial = "";
+        $riesgoEscolar = "";
+        $riesgoTecnologico = "";
+
+        $preguntasTess = pregunta::all();
 
         // Contar respuestas y calcular riesgos por contexto
-        for ($i = 1; $i <= $totalPreguntas; $i++) {
-            $atr = 'r' . $i;
-            $respuestaValor = $respuesta->$atr;
+        for ($x = 1; $x <= $totalP; $x++) {
+            $atr = 'r' . $x;
 
-            if ($respuestaValor === 1) {
+            // Si la respuesta es "Sí" (1)
+            if ($respuesta->$atr === 1) {
                 $rp++;
-                if ($preguntas[$i - 1]->contexto === 'Familiar') $rcfamiliar++;
-                if ($preguntas[$i - 1]->contexto === 'Técnologico') $rctecnologico++;
-                if ($preguntas[$i - 1]->contexto === 'Escolar') $rcescolar++;
-                if ($preguntas[$i - 1]->contexto === 'Social') $rcsocial++;
-            } elseif ($respuestaValor === 2) {
+                // Incrementar el contexto correspondiente
+                if ($preguntasTess[($x - 1)]->contexto === 'Familiar') {
+                    $rcfamiliar++;
+                }
+                if ($preguntasTess[($x - 1)]->contexto === 'Técnologico') {
+                    $rctecnologico++;
+                }
+                if ($preguntasTess[($x - 1)]->contexto === 'Social') {
+                    $rcsocial++;
+                }
+                if ($preguntasTess[($x - 1)]->contexto === 'Escolar') {
+                    $rcescolar++;
+                }
+            }
+
+            // Si la respuesta es "No sé" (2)
+            if ($respuesta->$atr === 2) {
                 $rneu++;
-            } elseif ($respuestaValor === 3) {
+                // Incrementar el contexto correspondiente
+                if ($preguntasTess[($x - 1)]->contexto === 'Familiar') {
+                    $rcfamiliar++;
+                }
+                if ($preguntasTess[($x - 1)]->contexto === 'Técnologico') {
+                    $rctecnologico++;
+                }
+                if ($preguntasTess[($x - 1)]->contexto === 'Social') {
+                    $rcsocial++;
+                }
+                if ($preguntasTess[($x - 1)]->contexto === 'Escolar') {
+                    $rcescolar++;
+                }
+            }
+
+            // Si la respuesta es "No" (3)
+            if ($respuesta->$atr === 3) {
                 $rn++;
             }
         }
 
         // Calcular porcentaje de respuestas positivas
-        $porcentajePositivas = ($rn * 100) / $totalPreguntas;
+        $pocPosi = ($rn * 100) / $totalP;
 
         // Calcular nivel de riesgo general
-        $riesgo = 'Bajo';
-        if ($porcentajePositivas <= 37.5) {
-            $riesgo = 'Alto';
-        } elseif ($porcentajePositivas <= 75) {
-            $riesgo = 'Medio';
+        if ($pocPosi >= 0 && $pocPosi <= 37.5) {
+            $riesgo = "Alto";
         }
 
-        // Calcular riesgos contextuales
+        if ($pocPosi > 37.5 && $pocPosi <= 75) {
+            $riesgo = "Medio";
+        }
+
+        if ($pocPosi > 75 && $pocPosi <= 100) {
+            $riesgo = "Bajo";
+        }
+
+        // Calcular riesgo familiar
+        if ((($rcfamiliar * 100) / 3) < 50) {
+            $riesgoFamiliar = 'Bajo';
+        }
+
+        if ((($rcfamiliar * 100) / 3) == 50) {
+            $riesgoFamiliar = 'Medio';
+        }
+
+        if ((($rcfamiliar * 100) / 3) > 50) {
+            $riesgoFamiliar = 'Alto';
+        }
+
+        // Calcular riesgo escolar
+        if ((($rcescolar * 100) / 3) < 50) {
+            $riesgoEscolar = 'Bajo';
+        }
+
+        if ((($rcescolar * 100) / 3) == 50) {
+            $riesgoEscolar = 'Medio';
+        }
+
+        if ((($rcescolar * 100) / 3) > 50) {
+            $riesgoEscolar = 'Alto';
+        }
+
+        // Calcular riesgo tecnológico
+        if ((($rctecnologico * 100) / 6) < 50) {
+            $riesgoTecnologico = 'Bajo';
+        }
+
+        if ((($rctecnologico * 100) / 6) == 50) {
+            $riesgoTecnologico = 'Medio';
+        }
+
+        if ((($rctecnologico * 100) / 6) > 50) {
+            $riesgoTecnologico = 'Alto';
+        }
+
+        // Calcular riesgo social
+        if ((($rcsocial * 100) / 3) < 50) {
+            $riesgoSocial = 'Bajo';
+        }
+
+        if ((($rcsocial * 100) / 3) == 50) {
+            $riesgoSocial = 'Medio';
+        }
+
+        if ((($rcsocial * 100) / 3) > 50) {
+            $riesgoSocial = 'Alto';
+        }
+
+        // Asignar valores calculados a las respuestas
         $respuesta->riesgo = $riesgo;
         $respuesta->acertadas = $rn;
         $respuesta->neutras = $rneu;
         $respuesta->negativas = $rp;
 
-        $respuesta->cFamiliar = ($rcfamiliar * 100) / 3 < 50 ? 'Bajo' : (($rcfamiliar * 100) / 3 == 50 ? 'Medio' : 'Alto');
-        $respuesta->cEscolar = ($rcescolar * 100) / 3 < 50 ? 'Bajo' : (($rcescolar * 100) / 3 == 50 ? 'Medio' : 'Alto');
-        $respuesta->cSocial = ($rcsocial * 100) / 3 < 50 ? 'Bajo' : (($rcsocial * 100) / 3 == 50 ? 'Medio' : 'Alto');
-        $respuesta->cTecnologico = ($rctecnologico * 100) / 6 < 50 ? 'Bajo' : (($rctecnologico * 100) / 6 == 50 ? 'Medio' : 'Alto');
+        // Asignar los riesgos contextuales
+        $respuesta->cFamiliar = $riesgoFamiliar;
+        $respuesta->cEscolar = $riesgoEscolar;
+        $respuesta->cSocial = $riesgoSocial;
+        $respuesta->cTecnologico = $riesgoTecnologico;
     }
 
     return $respuestasNino;
 }
+
 
 
 
