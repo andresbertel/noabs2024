@@ -62,6 +62,9 @@ Route::group(['middleware' => ['auth','can:isGestor']], function () {
     Route::get('informesresultados/{idRes}','informesController@verResultadosById')->name('informes');
     Route::get('informesInstitucion/{idInst}','informesController@InformePorInstitucion')->name('inforinst');
     Route::get('exportarExcel/{idInst}','informesController@exportarExcel')->name('exportarExcel');
+    Route::get('exportarCSV/{idInst}','informesController@exportarCSV')->name('exportarCSV');
+
+
 
 
 

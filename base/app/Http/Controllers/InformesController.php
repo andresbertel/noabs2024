@@ -567,179 +567,238 @@ class InformesController extends Controller
     }
 
     public function exportarExcel($idInst = 0)
-    {
-        $respuestasNino = [];
-        $user = Auth::user();
-    
-        // Obtener respuestas de los niños según el tipo de usuario
-        if (isset($user->admin->first()->exists)) {
-            $institucion_id = $idInst;
-            $ninosConRespuestas = Nino::where('institucion_id', $institucion_id)
-                ->whereHas('respuestas')
-                ->with('respuestas')
-                ->get();
-    
-            foreach ($ninosConRespuestas as $nino) {
-                if ($nino->respuestas->isNotEmpty()) {
-                    foreach ($nino->respuestas as $respnino) {
-                        $respuestasNino[] = $respnino;
-                    }
-                }
-            }
-        }
-    
-        if (isset($user->gestor->first()->exists)) {
-            $ninos = $user->gestor->first()->institucion->nino;
-    
-            foreach ($ninos as $nino) {
-                if ($nino->respuestas->first() != null) {
-                    foreach ($nino->respuestas as $respnino) {
-                        $respuestasNino[] = $respnino;
-                    }
-                }
-            }
-        }
-    
-        // Procesar respuestas y calcular valores adicionales
-        foreach ($respuestasNino as $respuesta) {
-            $totalPreguntas = 15;
-            $rn = 0; // "Sí"
-            $rneu = 0; // "No sé"
-            $rp = 0; // "No"
-            $rcfamiliar = 0;
-            $rctecnologico = 0;
-            $rcescolar = 0;
-            $rcsocial = 0;
-    
-            $preguntas = pregunta::all();
-    
-            // Contar respuestas y calcular riesgos por contexto
-            for ($i = 1; $i <= $totalPreguntas; $i++) {
-                $atr = 'r' . $i;
-                $respuestaValor = $respuesta->$atr;
-    
-                if ($respuestaValor === 1) {
-                    $rp++;
-                    if ($preguntas[$i - 1]->contexto === 'Familiar') $rcfamiliar++;
-                    if ($preguntas[$i - 1]->contexto === 'Técnologico') $rctecnologico++;
-                    if ($preguntas[$i - 1]->contexto === 'Escolar') $rcescolar++;
-                    if ($preguntas[$i - 1]->contexto === 'Social') $rcsocial++;
-                } elseif ($respuestaValor === 2) {
-                    $rneu++;
-                } elseif ($respuestaValor === 3) {
-                    $rn++;
-                }
-            }
-    
-            // Calcular porcentaje de respuestas positivas
-            $porcentajePositivas = ($rn * 100) / $totalPreguntas;
-    
-            // Calcular nivel de riesgo general
-            $riesgo = 'Bajo';
-            if ($porcentajePositivas <= 37.5) {
-                $riesgo = 'Alto';
-            } elseif ($porcentajePositivas <= 75) {
-                $riesgo = 'Medio';
-            }
-    
-            // Calcular riesgos contextuales
-            $respuesta->riesgo = $riesgo;
-            $respuesta->acertadas = $rn;
-            $respuesta->neutras = $rneu;
-            $respuesta->negativas = $rp;
-    
-            $respuesta->cFamiliar = ($rcfamiliar * 100) / 3 < 50 ? 'Bajo' : (($rcfamiliar * 100) / 3 == 50 ? 'Medio' : 'Alto');
-            $respuesta->cEscolar = ($rcescolar * 100) / 3 < 50 ? 'Bajo' : (($rcescolar * 100) / 3 == 50 ? 'Medio' : 'Alto');
-            $respuesta->cSocial = ($rcsocial * 100) / 3 < 50 ? 'Bajo' : (($rcsocial * 100) / 3 == 50 ? 'Medio' : 'Alto');
-            $respuesta->cTecnologico = ($rctecnologico * 100) / 6 < 50 ? 'Bajo' : (($rctecnologico * 100) / 6 == 50 ? 'Medio' : 'Alto');
-        }
-    
-        // Crear la tabla HTML para Excel
-        $output = "\xEF\xBB\xBF"; // Agregar BOM para UTF-8
+{
+    $respuestasNino = $this->procesarRespuestas($idInst);
+
+    $output = "\xEF\xBB\xBF"; // Agregar BOM para UTF-8
+    $output .= '
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Apellidos</th>
+                <th>Sexo</th>
+                <th>Fecha Nacimiento</th>
+                <th>Edad Actual</th>
+                <th>Edad al realizar test</th>
+                <th>Curso</th>
+                <th>Departamento</th>
+                <th>Dirección</th>
+                <th>Institucion</th>
+                <th>R1</th>
+                <th>R2</th>
+                <th>R3</th>
+                <th>R4</th>
+                <th>R5</th>
+                <th>R6</th>
+                <th>R7</th>
+                <th>R8</th>
+                <th>R9</th>
+                <th>R10</th>
+                <th>R11</th>
+                <th>R12</th>
+                <th>R13</th>
+                <th>R14</th>
+                <th>R15</th>
+                <th>No</th>
+                <th>No sé</th>
+                <th>Si</th>
+                <th>Nivel de riesgo</th>
+                <th>Riesgo Familiar</th>
+                <th>Riesgo Escolar</th>
+                <th>Riesgo Social</th>
+                <th>Riesgo Tecnológico</th>
+                <th>Fecha realización test</th>
+            </tr>
+        </thead>
+        <tbody>';
+
+    foreach ($respuestasNino as $respuesta) {
+        $nino = $respuesta->nino;
+        $usuario = $nino->usuario;
+
         $output .= '
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Apellidos</th>
-                    <th>Sexo</th>
-                    <th>Fecha Nacimiento</th>
-                    <th>Edad Actual</th>
-                    <th>Edad al realizar test</th>
-                    <th>Curso</th>
-                    <th>Departamento</th>
-                    <th>Dirección</th>
-                    <th>Institucion</th>
-                    <th>R1</th>
-                    <th>R2</th>
-                    <th>R3</th>
-                    <th>R4</th>
-                    <th>R5</th>
-                    <th>R6</th>
-                    <th>R7</th>
-                    <th>R8</th>
-                    <th>R9</th>
-                    <th>R10</th>
-                    <th>R11</th>
-                    <th>R12</th>
-                    <th>R13</th>
-                    <th>R14</th>
-                    <th>R15</th>
-                    <th>No</th>
-                    <th>No sé</th>
-                    <th>Si</th>
-                    <th>Nivel de riesgo</th>
-                    <th>Riesgo Familiar</th>
-                    <th>Riesgo Escolar</th>
-                    <th>Riesgo Social</th>
-                    <th>Riesgo Tecnológico</th>
-                    <th>Fecha realización test</th>
-                </tr>
-            </thead>
-            <tbody>';
-    
-        foreach ($respuestasNino as $respuesta) {
-            $nino = $respuesta->nino;
-            $usuario = $nino->usuario;
-    
-            $output .= '
-                <tr>
-                    <td>' . htmlspecialchars($usuario->nombres, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($usuario->apellidos, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($nino->sexo, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($nino->fecha_nacimiento, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars(\Carbon\Carbon::parse($nino->fecha_nacimiento)->age, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars(\Carbon\Carbon::parse($nino->fecha_nacimiento)->diffInYears(\Carbon\Carbon::parse($respuesta->fecha_realizacion)), ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($nino->curso ?? '-', ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($nino->departamento, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($nino->direccion, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($nino->institucion->nombre, ENT_QUOTES, 'UTF-8') . '</td>';
-    
-            for ($i = 1; $i <= 15; $i++) {
-                $output .= '<td>' . htmlspecialchars($respuesta->{'r' . $i}, ENT_QUOTES, 'UTF-8') . '</td>';
-            }
-    
-            $output .= '
-                    <td>' . htmlspecialchars($respuesta->negativas, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($respuesta->neutras, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($respuesta->acertadas, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($respuesta->riesgo, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($respuesta->cFamiliar, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($respuesta->cEscolar, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($respuesta->cSocial, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($respuesta->cTecnologico, ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars($respuesta->fecha_realizacion, ENT_QUOTES, 'UTF-8') . '</td>
-                </tr>';
+            <tr>
+                <td>' . htmlspecialchars($usuario->nombres, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($usuario->apellidos, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($nino->sexo, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($nino->fecha_nacimiento, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars(\Carbon\Carbon::parse($nino->fecha_nacimiento)->age, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars(\Carbon\Carbon::parse($nino->fecha_nacimiento)->diffInYears(\Carbon\Carbon::parse($respuesta->fecha_realizacion)), ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($nino->curso ?? '-', ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($nino->departamento, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($nino->direccion, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($nino->institucion->nombre, ENT_QUOTES, 'UTF-8') . '</td>';
+
+        for ($i = 1; $i <= 15; $i++) {
+            $output .= '<td>' . htmlspecialchars($respuesta->{'r' . $i}, ENT_QUOTES, 'UTF-8') . '</td>';
         }
-    
-        $output .= '</tbody></table>';
-    
-        return response($output, 200)
-            ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
-            ->header('Content-Disposition', 'attachment; filename="respuestas.xls"')
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0')
-            ->header('Pragma', 'no-cache');
+
+        $output .= '
+                <td>' . htmlspecialchars($respuesta->negativas, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($respuesta->neutras, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($respuesta->acertadas, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($respuesta->riesgo, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($respuesta->cFamiliar, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($respuesta->cEscolar, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($respuesta->cSocial, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($respuesta->cTecnologico, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($respuesta->fecha_realizacion, ENT_QUOTES, 'UTF-8') . '</td>
+            </tr>';
     }
+
+    $output .= '</tbody></table>';
+
+    return response($output, 200)
+        ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
+        ->header('Content-Disposition', 'attachment; filename="respuestas.xls"')
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0')
+        ->header('Pragma', 'no-cache');
+}
+
+public function exportarCSV($idInst = 0)
+{
+    $respuestasNino = $this->procesarRespuestas($idInst);
+
+    // Agregar BOM para UTF-8
+    $output = "\xEF\xBB\xBF";
+
+    // Encabezados de las columnas
+    $output .= "Nombre,Apellidos,Sexo,Fecha Nacimiento,Edad Actual,Edad al realizar test,Curso,Departamento,Dirección,Institucion,R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14,R15,No,No sé,Si,Nivel de riesgo,Riesgo Familiar,Riesgo Escolar,Riesgo Social,Riesgo Tecnológico,Fecha realización test\n";
+
+    foreach ($respuestasNino as $respuesta) {
+        $nino = $respuesta->nino;
+        $usuario = $nino->usuario;
+
+        // Asegurarse de que cada campo sea escapado para CSV
+        $output .= '"' . str_replace('"', '""', $usuario->nombres) . '",';
+        $output .= '"' . str_replace('"', '""', $usuario->apellidos) . '",';
+        $output .= '"' . str_replace('"', '""', $nino->sexo) . '",';
+        $output .= '"' . str_replace('"', '""', $nino->fecha_nacimiento) . '",';
+        $output .= '"' . str_replace('"', '""', \Carbon\Carbon::parse($nino->fecha_nacimiento)->age) . '",';
+        $output .= '"' . str_replace('"', '""', \Carbon\Carbon::parse($nino->fecha_nacimiento)->diffInYears(\Carbon\Carbon::parse($respuesta->fecha_realizacion))) . '",';
+        $output .= '"' . str_replace('"', '""', $nino->curso ?? '-') . '",';
+        $output .= '"' . str_replace('"', '""', $nino->departamento) . '",';
+        $output .= '"' . str_replace('"', '""', $nino->direccion) . '",';
+        $output .= '"' . str_replace('"', '""', $nino->institucion->nombre) . '",';
+
+        // Añadir respuestas R1-R15
+        for ($i = 1; $i <= 15; $i++) {
+            $output .= '"' . str_replace('"', '""', $respuesta->{'r' . $i}) . '",';
+        }
+
+        // Añadir demás campos
+        $output .= '"' . str_replace('"', '""', $respuesta->negativas) . '",';
+        $output .= '"' . str_replace('"', '""', $respuesta->neutras) . '",';
+        $output .= '"' . str_replace('"', '""', $respuesta->acertadas) . '",';
+        $output .= '"' . str_replace('"', '""', $respuesta->riesgo) . '",';
+        $output .= '"' . str_replace('"', '""', $respuesta->cFamiliar) . '",';
+        $output .= '"' . str_replace('"', '""', $respuesta->cEscolar) . '",';
+        $output .= '"' . str_replace('"', '""', $respuesta->cSocial) . '",';
+        $output .= '"' . str_replace('"', '""', $respuesta->cTecnologico) . '",';
+        $output .= '"' . str_replace('"', '""', $respuesta->fecha_realizacion) . '"';
+        $output .= "\n";
+    }
+
+    return response($output, 200)
+        ->header('Content-Type', 'text/csv; charset=UTF-8')
+        ->header('Content-Disposition', 'attachment; filename="respuestas.csv"')
+        ->header('Cache-Control', 'no-cache')
+        ->header('Pragma', 'no-cache');
+}
+
+
+    public function procesarRespuestas($idInst = 0)
+{
+    $respuestasNino = [];
+    $user = Auth::user();
+
+    // Obtener respuestas de los niños según el tipo de usuario
+    if (isset($user->admin->first()->exists)) {
+        $institucion_id = $idInst;
+        $ninosConRespuestas = Nino::where('institucion_id', $institucion_id)
+            ->whereHas('respuestas')
+            ->with('respuestas')
+            ->get();
+
+        foreach ($ninosConRespuestas as $nino) {
+            if ($nino->respuestas->isNotEmpty()) {
+                foreach ($nino->respuestas as $respnino) {
+                    $respuestasNino[] = $respnino;
+                }
+            }
+        }
+    }
+
+    if (isset($user->gestor->first()->exists)) {
+        $ninos = $user->gestor->first()->institucion->nino;
+
+        foreach ($ninos as $nino) {
+            if ($nino->respuestas->first() != null) {
+                foreach ($nino->respuestas as $respnino) {
+                    $respuestasNino[] = $respnino;
+                }
+            }
+        }
+    }
+
+    // Procesar respuestas y calcular valores adicionales
+    foreach ($respuestasNino as $respuesta) {
+        $totalPreguntas = 15;
+        $rn = 0; // "Sí"
+        $rneu = 0; // "No sé"
+        $rp = 0; // "No"
+        $rcfamiliar = 0;
+        $rctecnologico = 0;
+        $rcescolar = 0;
+        $rcsocial = 0;
+
+        $preguntas = pregunta::all();
+
+        // Contar respuestas y calcular riesgos por contexto
+        for ($i = 1; $i <= $totalPreguntas; $i++) {
+            $atr = 'r' . $i;
+            $respuestaValor = $respuesta->$atr;
+
+            if ($respuestaValor === 1) {
+                $rp++;
+                if ($preguntas[$i - 1]->contexto === 'Familiar') $rcfamiliar++;
+                if ($preguntas[$i - 1]->contexto === 'Técnologico') $rctecnologico++;
+                if ($preguntas[$i - 1]->contexto === 'Escolar') $rcescolar++;
+                if ($preguntas[$i - 1]->contexto === 'Social') $rcsocial++;
+            } elseif ($respuestaValor === 2) {
+                $rneu++;
+            } elseif ($respuestaValor === 3) {
+                $rn++;
+            }
+        }
+
+        // Calcular porcentaje de respuestas positivas
+        $porcentajePositivas = ($rn * 100) / $totalPreguntas;
+
+        // Calcular nivel de riesgo general
+        $riesgo = 'Bajo';
+        if ($porcentajePositivas <= 37.5) {
+            $riesgo = 'Alto';
+        } elseif ($porcentajePositivas <= 75) {
+            $riesgo = 'Medio';
+        }
+
+        // Calcular riesgos contextuales
+        $respuesta->riesgo = $riesgo;
+        $respuesta->acertadas = $rn;
+        $respuesta->neutras = $rneu;
+        $respuesta->negativas = $rp;
+
+        $respuesta->cFamiliar = ($rcfamiliar * 100) / 3 < 50 ? 'Bajo' : (($rcfamiliar * 100) / 3 == 50 ? 'Medio' : 'Alto');
+        $respuesta->cEscolar = ($rcescolar * 100) / 3 < 50 ? 'Bajo' : (($rcescolar * 100) / 3 == 50 ? 'Medio' : 'Alto');
+        $respuesta->cSocial = ($rcsocial * 100) / 3 < 50 ? 'Bajo' : (($rcsocial * 100) / 3 == 50 ? 'Medio' : 'Alto');
+        $respuesta->cTecnologico = ($rctecnologico * 100) / 6 < 50 ? 'Bajo' : (($rctecnologico * 100) / 6 == 50 ? 'Medio' : 'Alto');
+    }
+
+    return $respuestasNino;
+}
+
 
 
 }
