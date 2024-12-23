@@ -50,7 +50,7 @@ Route::group(['middleware' => ['auth','can:isAdmin']], function () {
 
 
 Route::group(['middleware' => ['auth','can:isGestor']], function () {
-   Route::get('registernino','gestorController@registerNinoForm')->name('registarninos');
+   Route::get('/registernino','gestorController@registerNinoForm')->name('registarninos');
    Route::post('registernino','gestorController@registerNino');
    Route::post('cargar-usuarios','gestorController@registerNinosCsv')->name('cargar.usuarios');
 
@@ -61,6 +61,14 @@ Route::group(['middleware' => ['auth','can:isGestor']], function () {
 
     Route::get('informesresultados/{idRes}','informesController@verResultadosById')->name('informes');
     Route::get('informesInstitucion/{idInst}','informesController@InformePorInstitucion')->name('inforinst');
+    Route::get('exportarExcel/{idInst}','informesController@exportarExcel')->name('exportarExcel');
+    Route::get('exportarCSV/{idInst}','informesController@exportarCSV')->name('exportarCSV');
+
+
+
+
+
+    
     Route::get('GenerarInformeView','informesController@InformesView')->name('GenerarInformeView');
     Route::get('descargar-csv','informesController@descargarcsv')->name('descargar.csv');
    
@@ -71,5 +79,3 @@ Route::group(['middleware' => ['auth','can:isGestor']], function () {
 //Route::group(['middleware' => ['auth','can:isNino'] ], function () {
     Route::post('/enviardatos','ninoController@enviarRespuestas');
 //});
-
-

@@ -58,6 +58,7 @@ class gestorController extends Controller
             $fec_final = new Carbon($institucioFechaF);
             $fec_actual = new Carbon();
 
+           
 
             if($fec_final>$fec_actual){
                 $permitido = true;
@@ -309,7 +310,7 @@ class gestorController extends Controller
             'hid'=>'required',
             'huser_id'=>'required',
             'password'=>'',
-            'nombres'=>'required',
+            'nombres'=>'required|min:5',
             'apellidos'=>'required',
             'sexo'=>'required',
             'curso'=>'required',
@@ -319,7 +320,7 @@ class gestorController extends Controller
             'departamento'=>'required',
             'direccion'=>'required',
             'activo'=>'required',
-            'email'=>'required',
+            'email'=>'required|unique:users,email,'.request()->input('huser_id'),
 
 
 
@@ -361,7 +362,7 @@ class gestorController extends Controller
     }
 
     function  verResultados(){
-        $respuestasNino = [];
+
         $user= Auth::user();
         if(isset($user->admin->first()->exists)){
             $respuestasNino = respuesta_nino::all();
