@@ -58,7 +58,7 @@ class gestorController extends Controller
             $fec_final = new Carbon($institucioFechaF);
             $fec_actual = new Carbon();
 
-            dd($fec_final);
+           
 
             if($fec_final>$fec_actual){
                 $permitido = true;

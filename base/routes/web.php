@@ -79,5 +79,3 @@ Route::group(['middleware' => ['auth','can:isGestor']], function () {
 //Route::group(['middleware' => ['auth','can:isNino'] ], function () {
     Route::post('/enviardatos','ninoController@enviarRespuestas');
 //});
-
-

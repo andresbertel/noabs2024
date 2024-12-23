@@ -635,9 +635,9 @@ class InformesController extends Controller
         }
 
         $output .= '
-                <td>' . htmlspecialchars($respuesta->negativas, ENT_QUOTES, 'UTF-8') . '</td>
-                <td>' . htmlspecialchars($respuesta->neutras, ENT_QUOTES, 'UTF-8') . '</td>
                 <td>' . htmlspecialchars($respuesta->acertadas, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($respuesta->neutras, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($respuesta->negativas, ENT_QUOTES, 'UTF-8') . '</td>
                 <td>' . htmlspecialchars($respuesta->riesgo, ENT_QUOTES, 'UTF-8') . '</td>
                 <td>' . htmlspecialchars($respuesta->cFamiliar, ENT_QUOTES, 'UTF-8') . '</td>
                 <td>' . htmlspecialchars($respuesta->cEscolar, ENT_QUOTES, 'UTF-8') . '</td>
